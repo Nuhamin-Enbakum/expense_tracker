@@ -19,14 +19,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
-  final _categoryController = TextEditingController();
+  final List<String> _categories = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other'];
+  String? _selectedCategory;
+ 
   final _noteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
   @override
   void dispose() {
     _amountController.dispose();
-    _categoryController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -35,7 +36,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.initState();
     if (widget.existingExpense != null) {
       _amountController.text = widget.existingExpense!.amount.toString();
-      _categoryController.text = widget.existingExpense!.category;
+      _selectedCategory = widget.existingExpense!.category;
       _noteController.text = widget.existingExpense!.note;
       _selectedDate = widget.existingExpense!.date;
     }
@@ -102,14 +103,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       if (value == null || value.trim().isEmpty){
                         return 'Please enter an amount';
                       }
-                      if (double.tryParse(value) == null){
+                      final parsedValue = double.tryParse(value);
+                      if (parsedValue == null){
                         return 'Please enter a valid number';
+                      }
+                      if (parsedValue <= 0) {
+                        return 'Amount must be greater than zero';
                       }
                       return null;
                     }
                   ),
-                  TextFormField(
-                    controller: _categoryController,
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    dropdownColor: const Color(0xFF121212),
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Category',
@@ -121,12 +127,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
                     ),
+                    items: _categories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    },
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a category';
+                      if (value == null) {
+                        return 'Please select a category';
                       }
                       return null;
                     },
+
                   ),
                   TextFormField(
                     controller: _noteController,
@@ -143,8 +161,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     ),
 
                   ),
-                  GestureDetector(
-                    onTap: () async {
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                     onTap: () async {
                       DateTime? pickedDate = await showDatePicker(
                         context: context,
                         initialDate: _selectedDate,
@@ -157,10 +177,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         });
                       }
                     },
-                    child: Text(
-                      'Date: ${_formatDate(_selectedDate)}',
-                      style: const TextStyle(color: Colors.white),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDate(_selectedDate),
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          const Icon(Icons.calendar_today, color: Colors.grey, size: 18),
+                        ],
+                      ),
+                      
                     ),
+                  ),
                   ),
                   SizedBox(
                     width: double.infinity,
@@ -172,7 +208,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             final updatedExpense = Expense(
                               id: widget.existingExpense!.id,
                             amount: double.parse(_amountController.text),
-                            category: _categoryController.text.trim(),
+                            category: _selectedCategory!,
                             note: _noteController.text.trim(),
                             date: _selectedDate,
                             userId: widget.userId,
@@ -182,7 +218,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             final newExpense = Expense(
                               id: '',
                               amount: double.parse(_amountController.text),
-                              category: _categoryController.text.trim(),
+                              category: _selectedCategory!,
                               note: _noteController.text.trim(),
                               date: _selectedDate,
                               userId: widget.userId,

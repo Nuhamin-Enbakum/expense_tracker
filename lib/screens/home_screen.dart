@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 550),
+          constraints: const BoxConstraints(maxWidth: 400),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: const Color(0xFF121212),
@@ -111,7 +111,9 @@ class HomeScreen extends StatelessWidget {
                       );
                     }
                     List<Expense> expenses = snapshot.data!;
-                    return ListView.builder(
+                    return Material(
+                      color: Colors.transparent,
+                      child: ListView.builder(
                       itemCount: expenses.length,
                       itemBuilder: (context, index) {
                         Expense expense = expenses[index];
@@ -183,6 +185,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         );
                       },
+                      ),
                     );
                   },
                 ),
